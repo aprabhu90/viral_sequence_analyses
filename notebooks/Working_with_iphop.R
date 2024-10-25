@@ -300,3 +300,118 @@ pie <- ggplot(hostphylum, aes(x="", y=log(n), fill=Phylum))+
   theme(axis.text.x=element_blank(),
         legend.position = "right")
 pie
+
+##############Archaea
+
+
+Archaea_checkv <- genomad_iphop2 %>% filter(Domain == "d__Archaea")
+Archaea_HQ <- Archaea_checkv %>% filter(contig_length >= 10000 & completeness >= 50)
+Archaea_HQ$Phylum <- gsub("p__", "", Archaea_HQ$Phylum)
+
+Archaea_checkv %>% group_by(checkv_quality == "High-quality") %>% tally()
+###Count viruses
+Archaea_count <- Archaea_HQ %>% group_by(Phylum) %>% tally()
+
+Archaea_count$Phylum<- factor(Archaea_count$Phylum, levels = c( "Nanoarchaeota",  
+                                                 "Asgardarchaeota", 
+                                                 "Thermoproteota",
+                                                 "Halobacteriota", 
+                                                 "Thermoplasmatota", 
+                                                 "Methanobacteriota"))
+Archaea_genomad_checkv <- left_join(Archaea_checkv[,c(1,2,1,12,14,16,17,19,20,21,23,25)], genomad_checkv[,c(2,11:19,21)],
+                                    by = c("Virus" = "seqname"))
+##########Barplot
+Ac0 <- ggplot(Archaea_HQ, aes(x = Order.Genus,  fill = Phylum, alpha = 0.5)) + geom_bar(colour="black")+
+  theme_bw() + 
+  facet_grid(Phylum ~ ., scales = "free", space = "free") +
+  theme(axis.text.x = element_text(angle = 90, size = 10),
+        axis.text.y = element_text(size = 14),
+        axis.ticks.y = element_blank(),
+        axis.title.y = element_blank(),
+        strip.text.y = element_blank(),
+        strip.background = element_blank( ),
+        panel.background = element_blank(),
+        # Hide panel borders and remove grid lines
+        #panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position = "none") +
+  ylab("Number of viral contigs") +
+  xlab("Host Taxonomy by genus") +
+  scale_fill_manual(values = c("#b4a7d6","#6598c6",  "#ffe599",  "#45818e",  "#d5a6bd", "#b6d7a8"
+                                        ))+
+                                          scale_y_log10() +
+  coord_flip() +
+  scale_y_continuous(limits = c(0, 50), breaks = seq(0, 50,5))
+
+Ac0
+
+##############################Boxplot
+Archaea_HQ$Phylum<- factor(Archaea_HQ$Phylum, levels = c( "Nanoarchaeota",  
+                                                 "Asgardarchaeota", 
+                                                 "Thermoproteota",
+                                                 "Halobacteriota", 
+                                                 "Thermoplasmatota", 
+                                                 "Methanobacteriota"))
+
+
+Ac1 <- ggplot(Archaea_HQ, aes(x = Order.Genus,y = contig_length/1000,  fill = Phylum, alpha = 0.5)) + geom_boxplot() + geom_jitter()+
+  theme_bw() + 
+  facet_grid(Phylum ~ ., scales = "free", space = "free") +
+  theme(axis.text.x = element_text(angle = 90, size = 10),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.y = element_blank(),
+        strip.text.y = element_blank(),
+        strip.background = element_blank( ),
+        panel.background = element_blank(),
+        # Hide panel borders and remove grid lines
+        #panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position = "none") +
+  ylab("Viral genome length (kb)") +
+  xlab("Host Taxonomy by genus") +
+  #stat_summary(fun.data = give.n, geom = "text", fun = count, color = "darkblue", position = "fill") +
+  #ggtitle("genomad-virsorter2 consensus") + 
+  scale_fill_manual(values = c("#b4a7d6","#6598c6",  "#ffe599",  "#45818e",  "#d5a6bd", "#b6d7a8"
+  ))+
+                                          scale_y_log10() +
+  coord_flip()
+
+Ac1
+
+############
+pcm <- melt(Archaea_HQ[,c(5,14,19,20)])
+
+pcm$Phylum<- factor(pcm$Phylum, levels = c( "Nanoarchaeota",  
+                                                          "Asgardarchaeota", 
+                                                          "Thermoproteota",
+                                                          "Halobacteriota", 
+                                                          "Thermoplasmatota", 
+                                                          "Methanobacteriota"))
+Ac2 <- ggplot(pcm, aes(x = Order.Genus,y = value,  fill = variable, alpha = 0.5)) + 
+  geom_col(position = "fill") + 
+  theme_bw() + 
+  facet_grid(Phylum~ ., scales = "free", space = "free") +
+  theme(axis.text.x = element_text(angle = 90, size = 10),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.y = element_blank(),
+        strip.text.y = element_blank(),
+        strip.background = element_blank( ),
+        panel.background = element_blank(),
+        # Hide panel borders and remove grid lines
+        #panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position = "none") +
+  ylab("Host:Viral genes") +
+  xlab("Number of genes") +
+  #stat_summary(fun.data = give.n, geom = "text", fun = count, color = "darkblue", position = "dodge") +
+  #ggtitle("genomad-virsorter2 consensus") + 
+  scale_fill_manual(values = c("darkgreen", "maroon"))+
+                                          scale_y_log10() +
+  coord_flip()
+
+Ac2
